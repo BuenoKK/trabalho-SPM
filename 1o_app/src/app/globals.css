@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+body 
+{
+  padding: 20px 10px 30px;
+  max-width: 900;
+  background-color: var(--color-blue-300);
+  margin: 0 auto;
+  color: var(--color-red-00);
+  font-family: Arial, Helvetica, sans-serif;
+}
