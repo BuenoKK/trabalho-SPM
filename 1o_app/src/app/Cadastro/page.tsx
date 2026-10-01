@@ -14,15 +14,15 @@ export default function Cadastro()
     <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-md">
       <h2 className="text-2xl font-semibold mb-4">Formulário de Contato</h2>
 
-        <div className="text-green-600 font-medium">
-          Obrigado por entrar em contato!
+        <div className="text-blue-600 font-medium">
+          Cadastro
         </div>
   
       <form onSubmit={pegarDados}>
       <label htmlFor="name" className="block text-sm font-medium text-gray-700">
           CPF:
           <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            type="number" name="cpf"/>
+            type="number" name="cpf" placeholder="123.456.789-09"/>
         </label>
 
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
