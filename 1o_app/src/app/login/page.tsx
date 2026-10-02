@@ -14,7 +14,11 @@ export default function Login() {
           Formulário de Login
         </h2>
 
+<<<<<<< HEAD
         <form onSubmit={pegarDados}>
+=======
+        <form>
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
 
         
           <label
@@ -54,6 +58,7 @@ export default function Login() {
       </div>
     </div>
   );
+<<<<<<< HEAD
 
   function pegarDados(event: React.FormEvent<HTMLFormElement>){
     event.preventDefault();
@@ -78,4 +83,6 @@ export default function Login() {
     console.log(dados)
 
   }
+=======
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
 }

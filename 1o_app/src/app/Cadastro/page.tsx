@@ -19,14 +19,21 @@ export default function Cadastro()
         </div>
   
       <form onSubmit={pegarDados}>
+<<<<<<< HEAD
       <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">
           CPF:
           <input id="cpf" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+=======
+      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          CPF:
+          <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
             type="number" name="cpf" placeholder="123.456.789-09"/>
         </label>
 
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">
           Nome completo:
+<<<<<<< HEAD
           <input id="name" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             type="text" name="nome"/>
         </label>
@@ -34,10 +41,20 @@ export default function Cadastro()
         <label htmlFor="Cc" className="block text-sm font-medium text-gray-700">
           Codigo do Curso:
           <input id="cc" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+=======
+          <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            type="text" name="nome"/>
+        </label>
+
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          Codigo do Curso:
+          <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
             type="number" name="codc"/>
         </label>
 
 
+<<<<<<< HEAD
         <label htmlFor="data" className="block text-sm font-medium text-gray-700">
           Data de Aniversario:
           <input id="data" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -53,6 +70,23 @@ export default function Cadastro()
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           E-mail:
           <input id="email" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+=======
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          Data de Aniversario:
+          <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            type="date" name="aniversario"/>
+        </label>
+
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          Celular:
+          <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            type="number" name="celular"/>
+        </label>
+
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          E-mail:
+          <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
             type="email" name="email"/>
         </label>
 
@@ -80,11 +114,18 @@ export default function Cadastro()
     </div>
   );
 
+<<<<<<< HEAD
 
   function pegarDados(event: React.FormEvent<HTMLFormElement>){
     event.preventDefault();
 
   const formulario = new FormData(event.currentTarget);
+=======
+  function pegarDados(event: React.FormEvent<HTMLFormElement>){
+    event.preventDefault();
+
+    const formulario = new FormData(event.currentTarget);
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
 
     const dados = {
       cpf: formulario.get("cpf"),
@@ -94,6 +135,7 @@ export default function Cadastro()
       celular: formulario.get("celular"),
       email: formulario.get("email"),
       senha: formulario.get("senha"),
+<<<<<<< HEAD
       };
 
       if (
@@ -117,5 +159,14 @@ export default function Cadastro()
 
     
   
+=======
+    };
+
+    console.log(dados)
+
+    router.push("/")
+
+  }
+>>>>>>> da8efc1614a2a533da1d9e6bfe78d19dc45b2513
 
 }
