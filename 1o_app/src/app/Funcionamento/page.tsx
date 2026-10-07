@@ -8,7 +8,7 @@ export default function QuemSomos()
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <main className={styles.container}>
                 <section className={styles.section}>
-                    <h2>Nossa História</h2>
+                    <h2>Funcionalidade</h2>
                     <p>
                         Fundada no ano de 2000, nossa empresa...
                     </p>

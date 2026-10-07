@@ -25,7 +25,7 @@ interface DadosDosAlunos {
       return (
         <div>
           <h2 className="text-center mt-5 mb-2 font-bold text-2x1">
-            Listagem dos ALUNOS cadastrados no BD (table ALUNO)
+            Listagem das Salas de Aula e Laboratorios nas tabelas
           </h2>
 
           <div className="flex flex-col gap-4 mx-2">

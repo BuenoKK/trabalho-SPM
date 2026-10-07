@@ -20,10 +20,7 @@ export function Header()
             <Link href="/laboratorios">laboratorios/Salas/Materiais</Link>
           </li>
           <li>
-            <Link href="/Funcionamento">Funcionamento</Link>
-          </li>
-          <li>
-            <Link href="/login">Login</Link>
+            <Link href="/login">Conta</Link>
           </li>
         </ul>
       </nav>
