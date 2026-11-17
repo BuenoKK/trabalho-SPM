@@ -129,7 +129,7 @@ export default function Cadastro() {
       }
 
       alert("Cadastro realizado com sucesso!");
-      router.push("/login");
+      router.push("/inicio");
 
     } catch (erro) {
       console.error("Erro:", erro);

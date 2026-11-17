@@ -5,7 +5,6 @@ import autenticarToken from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// GET /usuarios
 router.get('/', autenticarToken, async (req, res) => {
     try {
         const pool = await mssql.connect(

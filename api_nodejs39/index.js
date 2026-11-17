@@ -1,612 +1,674 @@
-import 'dotenv/config';
-import express from 'express';
-import mssql from 'mssql';
-import loginRoutes from './src/routes/loginRoutes.js';
-import cors from 'cors';
 
-const porta = process.env.PORTA;
-const stringSQL = process.env.CONNECTION_STRING;
+import "dotenv/config";
+import express from "express";
+import mssql from "mssql";
+import cors from "cors";
+import loginRoutes from "./src/routes/loginRoutes.js";
+import verificarToken from "./src/middlewares/verificarToken.js";
 
 const app = express();
+const porta = process.env.PORTA || 8080;
+const stringSQL = process.env.CONNECTION_STRING;
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
-app.use('/auth', loginRoutes);
 
+app.use("/auth", loginRoutes);
+
+// TESTE DO SERVIDOR
+
+app.get("/", (req, res) => {
+  res.json({ message: "Servidor rodando" });
+});
 
 // USUÁRIOS
-app.get("/usuarios", async (req, res) => {
-    try {
-        const pool = await mssql.connect(stringSQL);
 
-        const resultado = await pool
-            .request()
-            .query("SELECT * FROM usuario");
+app.get("/usuarios", verificarToken, async (req, res) => {
+  try {
+    const pool = await mssql.connect(stringSQL);
 
-        res.json(resultado.recordset);
+    const resultado = await pool.request().query(`
+      SELECT * FROM dbo.usuario
+    `);
 
-    } catch (erro) {
-        console.log(erro);
-
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
-});
-
-app.get("/recursos", async (req, res) => {
-    try {
-        const pool = await mssql.connect(stringSQL);
-
-        const resultado = await pool
-            .request()
-            .query("SELECT * FROM recurso");
-
-        res.json(resultado.recordset);
-
-    } catch (erro) {
-        console.log(erro);
-
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
-});
-
-app.get("/reservas", async (req, res) => {
-    try {
-        const pool = await mssql.connect(stringSQL);
-
-        const resultado = await pool
-            .request()
-            .query("SELECT * FROM reserva");
-
-        res.json(resultado.recordset);
-
-    } catch (erro) {
-        console.log(erro);
-
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
-});
-
-app.get("/status", async (req, res) => {
-    try {
-        const pool = await mssql.connect(stringSQL);
-
-        const resultado = await pool
-            .request()
-            .query("SELECT * FROM status");
-
-        res.json(resultado.recordset);
-
-    } catch (erro) {
-        console.log(erro);
-
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
+    res.json(resultado.recordset);
+  } catch (erro) {
+    console.error("Erro ao listar usuários:", erro);
+    res.status(500).json({ mensagem: "Erro ao listar usuários." });
+  }
 });
 
 app.post("/usuarios", async (req, res) => {
-    try {
-        const {
-            cpf,
-            nome_completo,
-            data_aniversario,
-            celular,
-            email,
-            login,
-            senha
-        } = req.body;
+  const {
+    cpf,
+    nome_completo,
+    data_aniversario,
+    celular,
+    email,
+    login,
+    senha,
+  } = req.body;
 
-        const pool = await mssql.connect(stringSQL);
-
-        // Primeiro cadastra na tabela usuario
-        const resultado = await pool.request()
-            .input("cpf", mssql.VarChar, cpf)
-            .input("nome_completo", mssql.VarChar, nome_completo)
-            .input("data_aniversario", mssql.Date, data_aniversario)
-            .input("celular", mssql.VarChar, celular)
-            .input("email", mssql.VarChar, email)
-            .query(`
-                INSERT INTO usuario
-                (cpf, nome_completo, data_aniversario, celular, email)
-                OUTPUT INSERTED.id_usuario
-                VALUES
-                (@cpf, @nome_completo, @data_aniversario, @celular, @email)
-            `);
-
-        const id_usuario = resultado.recordset[0].id_usuario;
-
-        // Depois cadastra o acesso
-        await pool.request()
-            .input("id_usuario", mssql.Int, id_usuario)
-            .input("login", mssql.VarChar, login)
-            .input("senha", mssql.VarChar, senha)
-            .query(`
-                INSERT INTO acesso_usuario
-                (id_usuario, login, senha)
-                VALUES
-                (@id_usuario, @login, @senha)
-            `);
-
-        res.status(201).json({
-            mensagem: "Usuário cadastrado com sucesso",
-            id_usuario: id_usuario
-        });
-
-    } catch (erro) {
-        console.log(erro);
-
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
-});
-
-app.post("/login", async (req, res) => {
-    try {
-        const { login, senha } = req.body;
-
-        const pool = await mssql.connect(stringSQL);
-
-        const resultado = await pool.request()
-            .input("login", mssql.VarChar, login)
-            .input("senha", mssql.VarChar, senha)
-            .query(`
-                SELECT
-                    u.id_usuario,
-                    u.cpf,
-                    u.nome_completo,
-                    u.data_aniversario,
-                    u.celular,
-                    u.email
-                FROM usuario u
-                INNER JOIN acesso_usuario a
-                    ON u.id_usuario = a.id_usuario
-                WHERE a.login = @login
-                  AND a.senha = @senha
-            `);
-
-        if (resultado.recordset.length === 0) {
-            return res.status(401).json({
-                mensagem: "Login ou senha inválidos"
-            });
-        }
-
-        const usuario = resultado.recordset[0];
-
-        // Atualiza a data do último acesso
-        await pool.request()
-            .input("id_usuario", mssql.Int, usuario.id_usuario)
-            .query(`
-                UPDATE acesso_usuario
-                SET data_ultimo_acesso = GETDATE()
-                WHERE id_usuario = @id_usuario
-            `);
-
-        res.status(200).json({
-            mensagem: "Login realizado com sucesso",
-            usuario: usuario
-        });
-
-    } catch (erro) {
-        console.log(erro);
-
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
-});
-
-app.post("/status", async (req, res) => {
-    try {
-        const {
-            codigo,
-            nome,
-            descricao
-        } = req.body;
-
-        const pool = await mssql.connect(stringSQL);
-
-        await pool.request()
-            .input("codigo", mssql.Int, codigo)
-            .input("nome", mssql.VarChar, nome)
-            .input("descricao", mssql.VarChar, descricao)
-            .query(`
-                INSERT INTO status
-                (codigo, nome, descricao)
-                VALUES
-                (@codigo, @nome, @descricao)
-            `);
-
-        res.status(201).json({
-            mensagem: "Status cadastrado com sucesso"
-        });
-
-    } catch (erro) {
-        res.status(500).json({
-            erro: erro.message
-        });
-    }
-});
-
-
-
-// TESTAR
-app.get("/", (req, res) => {
-    res.json({
-        message: "Servidor rodando"
+  if (
+    !cpf ||
+    !nome_completo ||
+    !data_aniversario ||
+    !celular ||
+    !email ||
+    !login ||
+    !senha
+  ) {
+    return res.status(400).json({
+      mensagem: "Preencha todos os campos do usuário.",
     });
+  }
+
+  let transaction;
+
+  try {
+    const pool = await mssql.connect(stringSQL);
+
+    transaction = new mssql.Transaction(pool);
+    await transaction.begin();
+
+    const resultadoUsuario = await new mssql.Request(transaction)
+      .input("cpf", mssql.VarChar(20), cpf)
+      .input("nome", mssql.VarChar(150), nome_completo)
+      .input("nascimento", mssql.Date, data_aniversario)
+      .input("celular", mssql.VarChar(30), celular)
+      .input("email", mssql.VarChar(150), email)
+      .query(`
+        INSERT INTO dbo.usuario
+          (cpf, nome_completo, data_aniversario, celular, email)
+        OUTPUT INSERTED.id_usuario
+        VALUES
+          (@cpf, @nome, @nascimento, @celular, @email)
+      `);
+
+    const id_usuario = resultadoUsuario.recordset[0].id_usuario;
+
+    await new mssql.Request(transaction)
+      .input("id_usuario", mssql.Int, id_usuario)
+      .input("login", mssql.VarChar(100), login)
+      .input("senha", mssql.VarChar(255), senha)
+      .query(`
+        INSERT INTO dbo.acesso_usuario (id_usuario, login, senha)
+        VALUES (@id_usuario, @login, @senha)
+      `);
+
+    await transaction.commit();
+
+    res.status(201).json({
+      mensagem: "Usuário cadastrado com sucesso.",
+      id_usuario,
+    });
+  } catch (erro) {
+    if (transaction) {
+      try {
+        await transaction.rollback();
+      } catch (erroRollback) {
+        console.error("Erro no rollback:", erroRollback);
+      }
+    }
+
+    console.error("Erro ao cadastrar usuário:", erro);
+
+    res.status(500).json({
+      mensagem: "Erro ao cadastrar usuário.",
+      erro: erro.message,
+    });
+  }
 });
 
-//  STARTAR
-app.listen(porta, () => {
-    console.log(`API funcionando!`);
-    console.log(`Servidor rodando em: http://localhost:${porta}`);
-});
+// RECURSOS (SALAS E LABORATÓRIOS)
 
-
-// LISTAR RECURSOS
 app.get("/recursos", async (req, res) => {
-    try {
-        const pool = await poolPromise;
+  try {
+    const pool = await mssql.connect(stringSQL);
 
-        const resultado = await pool.request().query(`
-            SELECT *
-            FROM dbo.recurso
-        `);
+    const resultado = await pool.request().query(`
+      SELECT * FROM dbo.recurso ORDER BY id_recurso
+    `);
 
-        res.json(resultado.recordset);
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao listar recursos" });
-    }
+    res.json(resultado.recordset);
+  } catch (erro) {
+    console.error("Erro ao listar recursos:", erro);
+    res.status(500).json({ mensagem: "Erro ao listar recursos." });
+  }
 });
 
-// BUSCA ID
 app.get("/recursos/:id", async (req, res) => {
-    try {
-        const pool = await poolPromise;
+  try {
+    const id = Number(req.params.id);
 
-        const resultado = await pool.request()
-            .input("id", sql.Int, req.params.id)
-            .query(`
-                SELECT *
-                FROM dbo.recurso
-                WHERE id_recurso = @id
-            `);
-
-        if (resultado.recordset.length === 0) {
-            return res.status(404).json({
-                mensagem: "Recurso não encontrado"
-            });
-        }
-
-        res.json(resultado.recordset[0]);
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao buscar recurso" });
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ mensagem: "ID inválido." });
     }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("id", mssql.Int, id)
+      .query(`
+        SELECT * FROM dbo.recurso WHERE id_recurso = @id
+      `);
+
+    if (resultado.recordset.length === 0) {
+      return res.status(404).json({
+        mensagem: "Recurso não encontrado.",
+      });
+    }
+
+    res.json(resultado.recordset[0]);
+  } catch (erro) {
+    console.error("Erro ao buscar recurso:", erro);
+    res.status(500).json({ mensagem: "Erro ao buscar recurso." });
+  }
 });
 
-// CADASTRAR 
-app.post("/recursos", async (req, res) => {
-    try {
-        const { nome, tipo, capacidade, localizacao } = req.body;
+app.post("/recursos", verificarToken, async (req, res) => {
+  try {
+    const { nome, tipo, capacidade, localizacao } = req.body;
 
-        if (
-            !nome ||
-            !tipo ||
-            !Number.isInteger(capacidade) ||
-            capacidade <= 0 ||
-            !localizacao
-        ) {
-            return res.status(400).json({
-                mensagem: "Informe nome, tipo, capacidade e localização válidos"
-            });
-        }
-
-        if (!["Sala", "Laboratorio"].includes(tipo)) {
-            return res.status(400).json({
-                mensagem: "O tipo deve ser Sala ou Laboratorio"
-            });
-        }
-
-        const pool = await poolPromise;
-
-        const resultado = await pool.request()
-            .input("nome", sql.VarChar(100), nome)
-            .input("tipo", sql.VarChar(20), tipo)
-            .input("capacidade", sql.Int, capacidade)
-            .input("localizacao", sql.VarChar(150), localizacao)
-            .query(`
-                INSERT INTO dbo.recurso
-                    (nome, tipo, capacidade, localizacao)
-                OUTPUT INSERTED.*
-                VALUES
-                    (@nome, @tipo, @capacidade, @localizacao)
-            `);
-
-        res.status(201).json({
-            mensagem: "Recurso cadastrado com sucesso!",
-            recurso: resultado.recordset[0]
-        });
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao cadastrar recurso" });
+    if (
+      typeof nome !== "string" ||
+      !nome.trim() ||
+      !["Sala", "Laboratorio"].includes(tipo) ||
+      !Number.isInteger(Number(capacidade)) ||
+      Number(capacidade) <= 0 ||
+      typeof localizacao !== "string" ||
+      !localizacao.trim()
+    ) {
+      return res.status(400).json({
+        mensagem: "Preencha os dados do recurso corretamente.",
+      });
     }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("nome", mssql.VarChar(100), nome.trim())
+      .input("tipo", mssql.VarChar(20), tipo)
+      .input("capacidade", mssql.Int, Number(capacidade))
+      .input("localizacao", mssql.VarChar(150), localizacao.trim())
+      .query(`
+        INSERT INTO dbo.recurso (nome, tipo, capacidade, localizacao)
+        OUTPUT INSERTED.id_recurso
+        VALUES (@nome, @tipo, @capacidade, @localizacao)
+      `);
+
+    res.status(201).json({
+      mensagem: "Sala ou laboratório cadastrado com sucesso.",
+      id_recurso: resultado.recordset[0].id_recurso,
+    });
+  } catch (erro) {
+    console.error("Erro ao cadastrar recurso:", erro);
+
+    res.status(500).json({
+      mensagem: "Erro ao cadastrar recurso.",
+      erro: erro.message,
+    });
+  }
 });
 
-// ATUALIZAR RECURSO
-app.patch("/recursos/:id", async (req, res) => {
-    try {
-        const { nome, tipo, capacidade, localizacao } = req.body;
-        const id = Number(req.params.id);
+app.patch("/recursos/:id", verificarToken, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { nome, tipo, capacidade, localizacao } = req.body;
 
-        if (!Number.isInteger(id) || id <= 0) {
-            return res.status(400).json({ mensagem: "ID inválido" });
-        }
-
-        if (
-            !nome ||
-            !tipo ||
-            !Number.isInteger(capacidade) ||
-            capacidade <= 0 ||
-            !localizacao
-        ) {
-            return res.status(400).json({
-                mensagem: "Informe todos os campos corretamente"
-            });
-        }
-
-        if (!["Sala", "Laboratorio"].includes(tipo)) {
-            return res.status(400).json({
-                mensagem: "O tipo deve ser Sala ou Laboratorio"
-            });
-        }
-
-        const pool = await poolPromise;
-
-        const resultado = await pool.request()
-            .input("id", sql.Int, id)
-            .input("nome", sql.VarChar(100), nome)
-            .input("tipo", sql.VarChar(20), tipo)
-            .input("capacidade", sql.Int, capacidade)
-            .input("localizacao", sql.VarChar(150), localizacao)
-            .query(`
-                UPDATE dbo.recurso
-                SET nome = @nome,
-                    tipo = @tipo,
-                    capacidade = @capacidade,
-                    localizacao = @localizacao
-                WHERE id_recurso = @id;
-
-                SELECT *
-                FROM dbo.recurso
-                WHERE id_recurso = @id;
-            `);
-
-        if (resultado.recordset.length === 0) {
-            return res.status(404).json({
-                mensagem: "Recurso não encontrado"
-            });
-        }
-
-        res.json({
-            mensagem: "Recurso atualizado com sucesso!",
-            recurso: resultado.recordset[0]
-        });
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao atualizar recurso" });
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ mensagem: "ID inválido." });
     }
+
+    if (
+      typeof nome !== "string" ||
+      !nome.trim() ||
+      !["Sala", "Laboratorio"].includes(tipo) ||
+      !Number.isInteger(Number(capacidade)) ||
+      Number(capacidade) <= 0 ||
+      typeof localizacao !== "string" ||
+      !localizacao.trim()
+    ) {
+      return res.status(400).json({
+        mensagem: "Preencha os dados do recurso corretamente.",
+      });
+    }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("id", mssql.Int, id)
+      .input("nome", mssql.VarChar(100), nome.trim())
+      .input("tipo", mssql.VarChar(20), tipo)
+      .input("capacidade", mssql.Int, Number(capacidade))
+      .input("localizacao", mssql.VarChar(150), localizacao.trim())
+      .query(`
+        UPDATE dbo.recurso
+        SET nome = @nome,
+            tipo = @tipo,
+            capacidade = @capacidade,
+            localizacao = @localizacao
+        WHERE id_recurso = @id
+      `);
+
+    if (resultado.rowsAffected[0] === 0) {
+      return res.status(404).json({
+        mensagem: "Recurso não encontrado.",
+      });
+    }
+
+    res.json({ mensagem: "Recurso atualizado com sucesso." });
+  } catch (erro) {
+    console.error("Erro ao atualizar recurso:", erro);
+    res.status(500).json({ mensagem: "Erro ao atualizar recurso." });
+  }
+});
+
+app.delete("/recursos/:id", verificarToken, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ mensagem: "ID inválido." });
+    }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("id", mssql.Int, id)
+      .query(`
+        DELETE FROM dbo.recurso WHERE id_recurso = @id
+      `);
+
+    if (resultado.rowsAffected[0] === 0) {
+      return res.status(404).json({
+        mensagem: "Recurso não encontrado.",
+      });
+    }
+
+    res.json({ mensagem: "Recurso excluído com sucesso." });
+  } catch (erro) {
+    console.error("Erro ao excluir recurso:", erro);
+
+    res.status(500).json({
+      mensagem: "Não foi possível excluir o recurso. Verifique se existem reservas vinculadas.",
+    });
+  }
 });
 
 
-app.delete("/recursos/:id", async (req, res) => {
-    try {
-        const id = Number(req.params.id);
+// RESERVAS
 
-        if (!Number.isInteger(id) || id <= 0) {
-            return res.status(400).json({ mensagem: "ID inválido" });
-        }
+// Listar reservas - exige login
+app.get("/reservas", verificarToken, async (req, res) => {
+  try {
+    const pool = await mssql.connect(stringSQL);
 
-        const pool = await poolPromise;
+    const resultado = await pool.request().query(`
+      SELECT
+        r.id_reserva,
+        r.data_inicial,
+        r.data_final,
+        r.hora_inicial,
+        r.hora_final,
+        r.id_usuario,
+        r.id_recurso,
+        rc.nome AS nome_recurso,
+        rc.tipo AS tipo_recurso,
+        r.codigo_status,
+        s.nome AS nome_status
+      FROM dbo.reserva r
+      INNER JOIN dbo.recurso rc
+        ON rc.id_recurso = r.id_recurso
+      INNER JOIN dbo.status s
+        ON s.codigo = r.codigo_status
+      ORDER BY r.data_inicial, r.hora_inicial
+    `);
 
-        const resultado = await pool.request()
-            .input("id", sql.Int, id)
-            .query(`
-                DELETE FROM dbo.recurso
-                WHERE id_recurso = @id;
-
-                SELECT @@ROWCOUNT AS quantidade;
-            `);
-
-        if (resultado.recordset[0].quantidade === 0) {
-            return res.status(404).json({
-                mensagem: "Recurso não encontrado"
-            });
-        }
-
-        res.json({ mensagem: "Recurso excluído com sucesso!" });
-    } catch (erro) {
-        console.error(erro);
-
-        res.status(500).json({
-            mensagem: "Não foi possível excluir. Verifique se existem reservas vinculadas."
-        });
-    }
+    res.json(resultado.recordset);
+  } catch (erro) {
+    console.error("Erro ao listar reservas:", erro);
+    res.status(500).json({ mensagem: "Erro ao listar reservas." });
+  }
 });
 
-// LISTAR TODOS OS STATUS
+app.post("/reservas", verificarToken, async (req, res) => {
+  try {
+    const {
+      codigo,
+      hora_inicial,
+      hora_final,
+      date_inicial,
+      date_final,
+    } = req.body;
+
+    const id_usuario = req.usuario.id_usuario;
+
+    if (
+      typeof codigo !== "string" ||
+      !codigo.trim() ||
+      !date_inicial ||
+      !date_final ||
+      !hora_inicial ||
+      !hora_final
+    ) {
+      return res.status(400).json({
+        mensagem: "Preencha todos os campos da reserva.",
+      });
+    }
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(date_inicial) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date_final) ||
+      !/^\d{2}:\d{2}$/.test(hora_inicial) ||
+      !/^\d{2}:\d{2}$/.test(hora_final)
+    ) {
+      return res.status(400).json({
+        mensagem: "Formato de data ou horário inválido.",
+      });
+    }
+
+    if (date_final < date_inicial) {
+      return res.status(400).json({
+        mensagem: "A data final não pode ser anterior à inicial.",
+      });
+    }
+
+    if (date_inicial === date_final && hora_final <= hora_inicial) {
+      return res.status(400).json({
+        mensagem: "O horário final deve ser posterior ao inicial.",
+      });
+    }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const recurso = await pool
+      .request()
+      .input("codigo", mssql.VarChar(100), codigo.trim())
+      .query(`
+        SELECT id_recurso
+        FROM dbo.recurso
+        WHERE nome = @codigo
+      `);
+
+    if (recurso.recordset.length === 0) {
+      return res.status(404).json({
+        mensagem: "Sala ou laboratório não encontrado. Confira o código.",
+      });
+    }
+
+    const id_recurso = recurso.recordset[0].id_recurso;
+
+    const usuario = await pool
+      .request()
+      .input("id_usuario", mssql.Int, Number(id_usuario))
+      .query(`
+        SELECT id_usuario
+        FROM dbo.usuario
+        WHERE id_usuario = @id_usuario
+      `);
+
+    if (usuario.recordset.length === 0) {
+      return res.status(404).json({
+        mensagem: "Usuário não encontrado.",
+      });
+    }
+
+    const status = await pool.request().query(`
+      SELECT codigo
+      FROM dbo.status
+      WHERE nome = 'Reservado'
+    `);
+
+    if (status.recordset.length === 0) {
+      return res.status(500).json({
+        mensagem: "O status 'Reservado' não existe na tabela dbo.status.",
+      });
+    }
+
+    const codigo_status = status.recordset[0].codigo;
+
+    const conflito = await pool
+      .request()
+      .input("id_recurso", mssql.Int, id_recurso)
+      .input("data_inicial", mssql.Date, date_inicial)
+      .input("data_final", mssql.Date, date_final)
+      .input("hora_inicial", mssql.VarChar(5), hora_inicial)
+      .input("hora_final", mssql.VarChar(5), hora_final)
+      .query(`
+        SELECT TOP 1 id_reserva
+        FROM dbo.reserva
+        WHERE id_recurso = @id_recurso
+          AND data_inicial <= @data_final
+          AND data_final >= @data_inicial
+          AND hora_inicial < CAST(@hora_final AS time)
+          AND hora_final > CAST(@hora_inicial AS time)
+      `);
+
+    if (conflito.recordset.length > 0) {
+      return res.status(409).json({
+        mensagem: "Esse recurso já possui uma reserva nesse período.",
+      });
+    }
+
+    const resultado = await pool
+      .request()
+      .input("data_inicial", mssql.Date, date_inicial)
+      .input("data_final", mssql.Date, date_final)
+      .input("hora_inicial", mssql.VarChar(5), hora_inicial)
+      .input("hora_final", mssql.VarChar(5), hora_final)
+      .input("id_usuario", mssql.Int, Number(id_usuario))
+      .input("id_recurso", mssql.Int, id_recurso)
+      .input("codigo_status", mssql.Int, codigo_status)
+      .query(`
+        INSERT INTO dbo.reserva (
+          data_inicial,
+          data_final,
+          hora_inicial,
+          hora_final,
+          id_usuario,
+          id_recurso,
+          codigo_status
+        )
+        OUTPUT INSERTED.id_reserva
+        VALUES (
+          @data_inicial,
+          @data_final,
+          CAST(@hora_inicial AS time),
+          CAST(@hora_final AS time),
+          @id_usuario,
+          @id_recurso,
+          @codigo_status
+        )
+      `);
+
+    res.status(201).json({
+      mensagem: "Reserva realizada com sucesso!",
+      id_reserva: resultado.recordset[0].id_reserva,
+    });
+  } catch (erro) {
+    console.error("Erro ao cadastrar reserva:", erro);
+
+    res.status(500).json({
+      mensagem: "Erro ao cadastrar reserva.",
+      erro: erro.message,
+    });
+  }
+});
+
+// STATUS
+
 app.get("/status", async (req, res) => {
-    try {
-        const pool = await poolPromise;
+  try {
+    const pool = await mssql.connect(stringSQL);
 
-        const resultado = await pool.request().query(`
-            SELECT *
-            FROM dbo.status
-        `);
+    const resultado = await pool.request().query(`
+      SELECT * FROM dbo.status ORDER BY codigo
+    `);
 
-        res.json(resultado.recordset);
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao listar status" });
-    }
+    res.json(resultado.recordset);
+  } catch (erro) {
+    console.error("Erro ao listar status:", erro);
+    res.status(500).json({ mensagem: "Erro ao listar status." });
+  }
 });
 
-// BUSCAR STATUS POR CÓDIGO
 app.get("/status/:codigo", async (req, res) => {
-    try {
-        const pool = await poolPromise;
+  try {
+    const codigo = Number(req.params.codigo);
 
-        const resultado = await pool.request()
-            .input("codigo", sql.Int, req.params.codigo)
-            .query(`
-                SELECT *
-                FROM dbo.status
-                WHERE codigo = @codigo
-            `);
-
-        if (resultado.recordset.length === 0) {
-            return res.status(404).json({
-                mensagem: "Status não encontrado"
-            });
-        }
-
-        res.json(resultado.recordset[0]);
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao buscar status" });
+    if (!Number.isInteger(codigo)) {
+      return res.status(400).json({ mensagem: "Código inválido." });
     }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("codigo", mssql.Int, codigo)
+      .query(`
+        SELECT * FROM dbo.status WHERE codigo = @codigo
+      `);
+
+    if (resultado.recordset.length === 0) {
+      return res.status(404).json({
+        mensagem: "Status não encontrado.",
+      });
+    }
+
+    res.json(resultado.recordset[0]);
+  } catch (erro) {
+    console.error("Erro ao buscar status:", erro);
+    res.status(500).json({ mensagem: "Erro ao buscar status." });
+  }
 });
 
-// CADASTRAR STATUS
 app.post("/status", async (req, res) => {
-    try {
-        const { codigo, nome, descricao } = req.body;
+  try {
+    const { codigo, nome, descricao } = req.body;
 
-        if (
-            !Number.isInteger(codigo) ||
-            codigo <= 0 ||
-            !nome
-        ) {
-            return res.status(400).json({
-                mensagem: "Informe um código válido e o nome do status"
-            });
-        }
-
-        const pool = await poolPromise;
-
-        const resultado = await pool.request()
-            .input("codigo", sql.Int, codigo)
-            .input("nome", sql.VarChar(50), nome)
-            .input("descricao", sql.VarChar(150), descricao || null)
-            .query(`
-                INSERT INTO dbo.status (codigo, nome, descricao)
-                OUTPUT INSERTED.*
-                VALUES (@codigo, @nome, @descricao)
-            `);
-
-        res.status(201).json({
-            mensagem: "Status cadastrado com sucesso!",
-            status: resultado.recordset[0]
-        });
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({
-            mensagem: "Erro ao cadastrar status. Verifique se o código já existe."
-        });
+    if (
+      codigo === undefined ||
+      !Number.isInteger(Number(codigo)) ||
+      !nome?.trim()
+    ) {
+      return res.status(400).json({
+        mensagem: "Informe o código e o nome do status.",
+      });
     }
+
+    const pool = await mssql.connect(stringSQL);
+
+    await pool
+      .request()
+      .input("codigo", mssql.Int, Number(codigo))
+      .input("nome", mssql.VarChar(50), nome.trim())
+      .input("descricao", mssql.VarChar(150), descricao || null)
+      .query(`
+        INSERT INTO dbo.status (codigo, nome, descricao)
+        VALUES (@codigo, @nome, @descricao)
+      `);
+
+    res.status(201).json({
+      mensagem: "Status cadastrado com sucesso.",
+    });
+  } catch (erro) {
+    console.error("Erro ao cadastrar status:", erro);
+    res.status(500).json({ mensagem: "Erro ao cadastrar status." });
+  }
 });
 
-// ATUALIZAR STATUS
 app.patch("/status/:codigo", async (req, res) => {
-    try {
-        const codigo = Number(req.params.codigo);
-        const { nome, descricao } = req.body;
+  try {
+    const codigo = Number(req.params.codigo);
+    const { nome, descricao } = req.body;
 
-        if (!Number.isInteger(codigo) || codigo <= 0 || !nome) {
-            return res.status(400).json({
-                mensagem: "Informe um código válido e o nome do status"
-            });
-        }
-
-        const pool = await poolPromise;
-
-        const resultado = await pool.request()
-            .input("codigo", sql.Int, codigo)
-            .input("nome", sql.VarChar(50), nome)
-            .input("descricao", sql.VarChar(150), descricao || null)
-            .query(`
-                UPDATE dbo.status
-                SET nome = @nome,
-                    descricao = @descricao
-                WHERE codigo = @codigo;
-
-                SELECT *
-                FROM dbo.status
-                WHERE codigo = @codigo;
-            `);
-
-        if (resultado.recordset.length === 0) {
-            return res.status(404).json({
-                mensagem: "Status não encontrado"
-            });
-        }
-
-        res.json({
-            mensagem: "Status atualizado com sucesso!",
-            status: resultado.recordset[0]
-        });
-    } catch (erro) {
-        console.error(erro);
-        res.status(500).json({ mensagem: "Erro ao atualizar status" });
+    if (!Number.isInteger(codigo) || !nome?.trim()) {
+      return res.status(400).json({
+        mensagem: "Informe um código válido e o nome do status.",
+      });
     }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("codigo", mssql.Int, codigo)
+      .input("nome", mssql.VarChar(50), nome.trim())
+      .input("descricao", mssql.VarChar(150), descricao || null)
+      .query(`
+        UPDATE dbo.status
+        SET nome = @nome, descricao = @descricao
+        WHERE codigo = @codigo
+      `);
+
+    if (resultado.rowsAffected[0] === 0) {
+      return res.status(404).json({
+        mensagem: "Status não encontrado.",
+      });
+    }
+
+    res.json({ mensagem: "Status atualizado com sucesso." });
+  } catch (erro) {
+    console.error("Erro ao atualizar status:", erro);
+    res.status(500).json({ mensagem: "Erro ao atualizar status." });
+  }
 });
 
-// EXCLUIR STATUS
 app.delete("/status/:codigo", async (req, res) => {
-    try {
-        const codigo = Number(req.params.codigo);
+  try {
+    const codigo = Number(req.params.codigo);
 
-        if (!Number.isInteger(codigo) || codigo <= 0) {
-            return res.status(400).json({ mensagem: "Código inválido" });
-        }
-
-        const pool = await poolPromise;
-
-        const resultado = await pool.request()
-            .input("codigo", sql.Int, codigo)
-            .query(`
-                DELETE FROM dbo.status
-                WHERE codigo = @codigo;
-
-                SELECT @@ROWCOUNT AS quantidade;
-            `);
-
-        if (resultado.recordset[0].quantidade === 0) {
-            return res.status(404).json({
-                mensagem: "Status não encontrado"
-            });
-        }
-
-        res.json({ mensagem: "Status excluído com sucesso!" });
-    } catch (erro) {
-        console.error(erro);
-
-        res.status(500).json({
-            mensagem: "Não foi possível excluir. Verifique se existem reservas vinculadas."
-        });
+    if (!Number.isInteger(codigo)) {
+      return res.status(400).json({ mensagem: "Código inválido." });
     }
+
+    const pool = await mssql.connect(stringSQL);
+
+    const resultado = await pool
+      .request()
+      .input("codigo", mssql.Int, codigo)
+      .query(`
+        DELETE FROM dbo.status WHERE codigo = @codigo
+      `);
+
+    if (resultado.rowsAffected[0] === 0) {
+      return res.status(404).json({
+        mensagem: "Status não encontrado.",
+      });
+    }
+
+    res.json({ mensagem: "Status excluído com sucesso." });
+  } catch (erro) {
+    console.error("Erro ao excluir status:", erro);
+
+    res.status(500).json({
+      mensagem: "Não foi possível excluir o status. Verifique se está vinculado a uma reserva.",
+    });
+  }
+});
+
+
+// INICIAR 
+
+if (!stringSQL) {
+  console.error(
+    "A variável CONNECTION_STRING não foi definida no arquivo .env."
+  );
+  process.exit(1);
+}
+
+app.listen(porta, () => {
+  console.log(`Servidor rodando na porta ${porta}`);
 });

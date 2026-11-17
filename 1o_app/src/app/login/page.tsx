@@ -53,7 +53,7 @@ export default function Login() {
       );
 
       alert("Login realizado com sucesso!");
-      router.push("/");
+      router.push("/inicio");
     } catch (erro) {
       console.error("Erro ao realizar login:", erro);
       alert("Não foi possível conectar à API.");
