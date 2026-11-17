@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -24,7 +24,7 @@ export default function Cadastro() {
           <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">
             CPF:
             <input id="cpf" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              type="number" name="cpf" placeholder="123.456.789-09" />
+              type="text" maxLength={14} name="cpf" placeholder="123.456.789-09" />
           </label>
 
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -41,7 +41,7 @@ export default function Cadastro() {
           </label>
 
 
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="celular" className="block text-sm font-medium text-gray-700">
             Celular:
             <input className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               type="number" name="celular" />
@@ -82,7 +82,7 @@ export default function Cadastro() {
 
 
   async function pegarDados(
-    event: React.FormEvent<HTMLFormElement>
+    event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
@@ -111,15 +111,13 @@ export default function Cadastro() {
     }
 
     try {
-      const resposta = await fetch("http://localhost:8080/usuarios",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dados),
-        }
-      );
+      const resposta = await fetch("http://localhost:8080/usuarios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dados),
+      });
 
       const resultado = await resposta.json();
 
