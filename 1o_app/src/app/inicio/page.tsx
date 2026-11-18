@@ -21,7 +21,7 @@ export default function Home() {
     }
 
     if (logado === null) {
-        return <p className="text-center mt-10">Carregando...</p>;
+        return (<p className="text-white text-center mt-10">Carregando...</p>);
     }
 
 
