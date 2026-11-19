@@ -92,20 +92,29 @@ export default function Laboratorios() {
     }
 
     return (
+        
+
         <div>
-            <h2 className="text-center mt-5 mb-6 font-bold text-2xl text-gray-100">
-                Salas de Aula e Laboratórios
-            </h2>
+    <h2 className="text-center mt-5 mb-6 font-bold text-2xl text-gray-100">
+        Salas de Aula e Laboratórios
+    </h2>
+
+  
+    <div className="flex flex-row gap-6 mx-2">
+
+       
+        <div className="flex flex-col">
 
             <h3 className="font-bold text-xl mb-3 text-gray-200">
                 Salas e Laboratórios
             </h3>
 
-            <div className="flex flex-col gap-4 mx-2 mb-8">
+            <div className="w-[407px] h-[500px] overflow-y-auto bg-gray-800 p-4 flex flex-col gap-4">
+
                 {recursos.map((recurso) => (
                     <div
                         key={recurso.id_recurso}
-                        className="bg-gray-300 p-4 rounded-md"
+                        className="bg-gray-300 p-4 rounded-md w-full"
                     >
                         <p><strong>Código:</strong> {recurso.nome}</p>
                         <p><strong>Tipo:</strong> {recurso.tipo}</p>
@@ -113,29 +122,34 @@ export default function Laboratorios() {
                         <p><strong>Localização:</strong> {recurso.localizacao}</p>
                     </div>
                 ))}
-            </div>
 
-            <h2 className="font-bold text-xl mb-3 text-gray-200">
+            </div>
+        </div>
+
+
+        
+        <div className="flex flex-col">
+
+            <h3 className="font-bold text-xl mb-3 text-gray-200">
                 Reservas
-            </h2>
+            </h3>
 
             {erro && (
-                <p className="text-red-400 mx-2 mb-4">
-                    {erro}
-                </p>
+                <p className="text-red-400 mb-4">{erro}</p>
             )}
 
             {!erro && reservas.length === 0 && (
-                <p className="text-gray-200 mx-2">
+                <p className="text-gray-200 mb-4">
                     Nenhuma reserva encontrada.
                 </p>
             )}
 
-            <div className="flex flex-col gap-4 mx-2 mb-8">
+            <div className="w-[440px] h-[500px] overflow-y-auto bg-gray-800 p-4 flex flex-col gap-4">
+
                 {reservas.map((reserva) => (
                     <div
                         key={reserva.id_reserva}
-                        className="bg-gray-300 p-4 rounded-md"
+                        className="bg-gray-300 p-4 rounded-md w-full"
                     >
                         <p>
                             <strong>Data inicial:</strong>{" "}
@@ -152,9 +166,15 @@ export default function Laboratorios() {
                         <p><strong>ID usuário:</strong> {reserva.id_usuario}</p>
                         <p><strong>ID recurso:</strong> {reserva.id_recurso}</p>
                         <p><strong>Status:</strong> {reserva.codigo_status}</p>
+
                     </div>
                 ))}
+
             </div>
         </div>
+
+    </div>
+</div>
+
     );
 }

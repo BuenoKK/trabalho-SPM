@@ -1,0 +1,25 @@
+.pagina {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.conteudo {
+    flex: 1;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    padding: 20px;
+}
+
+.card {
+    min-height: 150px;
+    background-color: rgb(65, 83, 88);
+    border-radius: 10px;
+    color: aliceblue;
+    padding: 20px;
+}

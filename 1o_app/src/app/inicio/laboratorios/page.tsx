@@ -144,182 +144,182 @@ export default function Laboratorios() {
   
 
   return (
-    <div>
-      <h2 className="text-center mt-5 mb-2 font-bold text-2xl">
-        Cadastro dos Laboratórios e Salas
-      </h2>
+    <div className="w-1/2">
+  <h2 className="text-center mt-5 mb-2 font-bold text-2xl">
+    Cadastro dos Laboratórios e Salas
+  </h2>
 
-      <h2 className="text-center mt-5 mb-2 font-bold text-2xl">
-        Cadastrar:
-      </h2>
+  <h2 className="text-center mt-5 mb-2 font-bold text-2xl">
+    Cadastrar:
+  </h2>
 
-      <div className="flex flex-col gap-4 mx-2 bg-gray-200 rounded-[30px] p-5">
-        <form onSubmit={pegardados}>
-          <label
-            htmlFor="codigo"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Código:
-            <input
-              id="codigo"
-              className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-              type="text"
-              name="codigo"
-              placeholder="xxxx-123"
-              required
-            />
-          </label>
+  <div className="flex flex-col gap-4 mx-2 bg-gray-200 rounded-[30px] p-5">
+    <form onSubmit={pegardados}>
+      <label
+        htmlFor="codigo"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Código:
+        <input
+          id="codigo"
+          className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+          type="text"
+          name="codigo"
+          placeholder="xxxx-123"
+          required
+        />
+      </label>
 
-          <label
-            htmlFor="tipo"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Sala ou Laboratório:
-            <select
-              id="tipo"
-              name="tipo"
-              className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-              required
-            >
-              <option value="Sala">Sala</option>
-              <option value="Laboratorio">Laboratório</option>
-            </select>
-          </label>
+      <label
+        htmlFor="tipo"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Sala ou Laboratório:
+        <select
+          id="tipo"
+          name="tipo"
+          className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+          required
+        >
+          <option value="Sala">Sala</option>
+          <option value="Laboratorio">Laboratório</option>
+        </select>
+      </label>
 
-          <label
-            htmlFor="capacidade"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Capacidade:
-            <input
-              id="capacidade"
-              className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-              type="number"
-              name="capacidade"
-              min="1"
-              step="1"
-              required
-            />
-          </label>
+      <label
+        htmlFor="capacidade"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Capacidade:
+        <input
+          id="capacidade"
+          className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+          type="number"
+          name="capacidade"
+          min="1"
+          step="1"
+          required
+        />
+      </label>
 
-          <label
-            htmlFor="localizacao"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Localização:
-            <input
-              id="localizacao"
-              className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-              type="text"
-              name="localizacao"
-              required
-            />
-          </label>
+      <label
+        htmlFor="localizacao"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Localização:
+        <input
+          id="localizacao"
+          className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+          type="text"
+          name="localizacao"
+          required
+        />
+      </label>
 
-          <br />
+      <br />
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200"
-          >
-            Cadastrar Laboratórios ou Salas
-          </button>
-        </form>
+      <button
+        type="submit"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200"
+      >
+        Cadastrar Laboratórios ou Salas
+      </button>
+    </form>
+  </div>
+
+  <h2 className="text-center mt-5 mb-2 font-bold text-2xl">
+    Reserva:
+  </h2>
+
+  <div className="flex flex-col gap-4 mx-2 bg-gray-200 rounded-[30px] p-5">
+    <form onSubmit={pegardadosL}>
+      <label
+        htmlFor="codigo-reserva"
+        className="block text-sm font-medium text-gray-700"
+      >
+        Código do recurso:
+        <input
+          id="codigo-reserva"
+          className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+          type="text"
+          name="codigo"
+          placeholder="Código da sala ou laboratório"
+          required
+        />
+      </label>
+
+      <div className="grid grid-cols-2 gap-4">
+        <label
+          htmlFor="hora_inicial"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Horário inicial:
+          <input
+            id="hora_inicial"
+            className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+            type="time"
+            name="hora_inicial"
+            required
+          />
+        </label>
+
+        <label
+          htmlFor="hora_final"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Horário final:
+          <input
+            id="hora_final"
+            className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+            type="time"
+            name="hora_final"
+            required
+          />
+        </label>
       </div>
 
-      <h2 className="text-center mt-5 mb-2 font-bold text-2xl">
-        Reserva:
-      </h2>
+      <div className="grid grid-cols-2 gap-4">
+        <label
+          htmlFor="date_inicial"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Data inicial:
+          <input
+            id="date_inicial"
+            className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+            type="date"
+            name="date_inicial"
+            required
+          />
+        </label>
 
-      <div className="flex flex-col gap-4 mx-2 bg-gray-200 rounded-[30px] p-5">
-        <form onSubmit={pegardadosL}>
-          <label
-            htmlFor="codigo-reserva"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Código do recurso:
-            <input
-              id="codigo-reserva"
-              className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-              type="text"
-              name="codigo"
-              placeholder="Código da sala ou laboratório"
-              required
-            />
-          </label>
-
-          <div className="grid grid-cols-2 gap-4">
-            <label
-              htmlFor="hora_inicial"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Horário inicial:
-              <input
-                id="hora_inicial"
-                className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-                type="time"
-                name="hora_inicial"
-                required
-              />
-            </label>
-
-            <label
-              htmlFor="hora_final"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Horário final:
-              <input
-                id="hora_final"
-                className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-                type="time"
-                name="hora_final"
-                required
-              />
-            </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <label
-              htmlFor="date_inicial"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Data inicial:
-              <input
-                id="date_inicial"
-                className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-                type="date"
-                name="date_inicial"
-                required
-              />
-            </label>
-
-            <label
-              htmlFor="date_final"
-              className="block w-full text-sm font-medium text-gray-700"
-            >
-              Data final:
-              <input
-                id="date_final"
-                className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
-                type="date"
-                name="date_final"
-                required
-              />
-            </label>
-          </div>
-
-          <br />
-
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200"
-          >
-            Reservar Laboratório ou Sala
-          </button>
-        </form>
+        <label
+          htmlFor="date_final"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Data final:
+          <input
+            id="date_final"
+            className="mt-1 block w-full px-4 py-2 border border-gray-400 rounded-md"
+            type="date"
+            name="date_final"
+            required
+          />
+        </label>
       </div>
 
       <br />
-    </div>
+
+      <button
+        type="submit"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200"
+      >
+        Reservar Laboratório ou Sala
+      </button>
+    </form>
+  </div>
+
+  <br />
+</div>
   );
 }
