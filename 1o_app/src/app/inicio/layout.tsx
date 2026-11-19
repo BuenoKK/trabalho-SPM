@@ -8,15 +8,16 @@ export default function RootLayout
     : LayoutProps<"/">
 ) 
 {
-  return (
-    <html>
-      <body>
-        <Header/>
-        
-        { children }
 
-        
-      </body>
-    </html>
+  return (
+    <>
+      <Header />
+
+      <main>
+        {children}
+      </main>
+
+
+    </>
   );
 }

@@ -58,7 +58,6 @@ export default function Cadastro() {
       return;
     }
 
-    
   }
 
   return (
@@ -75,10 +74,13 @@ export default function Cadastro() {
               id="cpf"
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               type="text"
-              maxLength={14}
+              maxLength={11}
               name="cpf"
               placeholder="123.456.789-09"
-            />
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
+    />
           </label>
 
           <label htmlFor="nome" className="block mb-4 text-sm font-medium text-gray-700">
@@ -107,7 +109,12 @@ export default function Cadastro() {
               id="celular"
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               type="tel"
+              maxLength={11}
               name="celular"
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
+
             />
           </label>
 
